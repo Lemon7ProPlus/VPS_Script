@@ -1,7 +1,5 @@
 # VPS_Script
-##
-Based on Sing-box with Vless-reality, Vless-websockt, Hysteria2 configuration.
-## Usage
+## Sing-box
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Lemon7ProPlus/VPS_Script/main/sb.sh | \
 VPS_NAME="myserver" \
@@ -13,13 +11,13 @@ DOMAIN_VPS="VPS_Domain" \
 TOKEN_CF="CF_Token" \
 bash
 ```
-
+## SSHwifty
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Lemon7ProPlus/VPS_Script/main/sshwifty.sh | \
 DOMAIN=YOUR_SERVER_DOMAIN \
 bash
 ```
-
+## Hubproxy
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Lemon7ProPlus/VPS_Script/main/hubproxy.sh | \
 CUSTOM_DOMAIN=your.domain.com \
