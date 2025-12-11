@@ -353,13 +353,13 @@ main() {
     install_dependencies
     generate_config_values
     generate_config_json
-
+    
+    install_sing_box
     echo "=== 安装配置文件到 /etc/sing-box/ ==="
     mkdir -p /etc/sing-box
     install -m 600 "$CONFIG_FILE" /etc/sing-box/config.json
     echo "✅ 已移动到 /etc/sing-box/config.json"
-
-    install_sing_box
+    
     start_sing_box
     generate_share_links
 }
