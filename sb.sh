@@ -4,6 +4,34 @@ set -euo pipefail
 
 CONFIG_FILE="config.json"
 
+############################################
+# 依赖安装：openssl + vim（根据系统类型自动安装）
+############################################
+install_dependencies() {
+    echo "=== 检查并安装依赖 (vim, openssl) ==="
+
+    if [[ $EUID -ne 0 ]]; then
+        echo "[ERROR] 此脚本需要 root 权限运行"
+        exit 1
+    fi
+
+    local deps=("vim" "openssl")
+
+    if command -v apt >/dev/null 2>&1; then
+        apt update -y
+        apt install -y "${deps[@]}"
+
+    elif command -v apk >/dev/null 2>&1; then
+        apk update
+        apk add "${deps[@]}"
+
+    else
+        echo "[WARNING] 未知系统类型，请手动安装：vim openssl"
+    fi
+
+    echo "=== 依赖安装完毕 ==="
+}
+
 # ---------- 用户自定义参数 ----------
 VPS_NAME=${VPS_NAME:-"myserver"}
 PORT_REAL=${PORT_REAL:-443}
@@ -32,7 +60,7 @@ urlencode() {
 get_vps_ip() {
     local ip=""
     if command -v curl &>/dev/null; then
-        ip=$(curl -s --connect-timeout 3 https://one.one.one.one/cdn-cgi/trace 2>/dev/null | grep '^ip=' | cut -d= -f2)
+        ip=$(curl -s --connect-timeout 3 https://one.one.one.one/cdn-cgi/trace | grep '^ip=' | cut -d= -f2)
     fi
     [ -z "$ip" ] && ip=$(hostname -I | awk '{print $1}')
     [ -z "$ip" ] && { echo "无法获取 VPS IP" >&2; return 1; }
@@ -206,7 +234,7 @@ generate_config_json() {
 }
 EOF
 
-    echo "config.json生成完成: $CONFIG_FILE"
+    echo "✅ config.json生成完成: $CONFIG_FILE"
 }
 
 # ---------- 安装 sing-box ----------
@@ -233,7 +261,7 @@ install_sing_box() {
             echo "不支持的系统类型：$OS_ID"; return 1 ;;
     esac
 
-    command -v sing-box >/dev/null 2>&1 && echo "✅ 安装成功！" || { echo "❌ 安装失败"; return 1; }
+    command -v sing-box >/dev/null 2>&1 && echo "安装成功" || { echo "安装失败"; return 1; }
 }
 
 # ---------- 启动 sing-box ----------
@@ -261,10 +289,9 @@ start_sing_box() {
 generate_share_links() {
     mkdir -p /root/list
 
-    # URL encode hy2 password, keep "==" unchanged
     PASSWORD_HY2_ENC=$(printf '%s' "$PASSWORD_HY2" | sed -e 's/\//%2F/g')
 
-    # SINGBOX LINKS FILE
+    # 统一使用 /root/list（你原脚本路径有误）
     cat >/root/list/singbox <<EOF
 vless://${UUID_REAL}@${VPS_IP_FORMATTED}:${PORT_REAL}?security=reality&sni=${DOMAIN_REAL}&fp=firefox&pbk=${PUBLIC_KEY_REAL}&type=tcp&flow=xtls-rprx-vision&packetEncoding=xudp&encryption=none#${VPS_NAME}-reality
 hy2://${PASSWORD_HY2_ENC}@${VPS_IP_FORMATTED}:${PORT_HY2}?sni=${DOMAIN_VPS}#${VPS_NAME}-hy2
@@ -275,7 +302,6 @@ EOF
     cat /root/list/singbox
     echo "====================================================="
 
-    # MIHOMO (Clash Meta) YAML FILE
     cat >/root/list/mihomo <<EOF
 proxies:
   - type: vless
@@ -320,9 +346,11 @@ EOF
     echo "=========================================================="
 }
 
-
-# ---------- 主程序 ----------
+############################################
+# 主程序
+############################################
 main() {
+    install_dependencies
     generate_config_values
     generate_config_json
 
