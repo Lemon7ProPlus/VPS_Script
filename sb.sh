@@ -371,6 +371,7 @@ main() {
     generate_config_json
     
     install_sing_box
+    
     echo "=== 安装配置文件到 /etc/sing-box/ ==="
     mkdir -p /etc/sing-box
     install -m 600 "$CONFIG_FILE" /etc/sing-box/config.json
