@@ -265,7 +265,7 @@ generate_share_links() {
     PASSWORD_HY2_ENC=$(printf '%s' "$PASSWORD_HY2" | sed -e 's/\//%2F/g')
 
     # SINGBOX LINKS FILE
-    cat >/home/list/singbox <<EOF
+    cat >/root/list/singbox <<EOF
 vless://${UUID_REAL}@${VPS_IP_FORMATTED}:${PORT_REAL}?security=reality&sni=${DOMAIN_REAL}&fp=firefox&pbk=${PUBLIC_KEY_REAL}&type=tcp&flow=xtls-rprx-vision&packetEncoding=xudp&encryption=none#${VPS_NAME}-reality
 hy2://${PASSWORD_HY2_ENC}@${VPS_IP_FORMATTED}:${PORT_HY2}?sni=${DOMAIN_VPS}#${VPS_NAME}-hy2
 vless://${UUID_WS}@${DOMAIN_CDN}:443?security=tls&sni=${DOMAIN_VPS}&fp=firefox&type=ws&path=${PATH_WS}&host=${DOMAIN_VPS}&mux=false&packetEncoding=xudp&encryption=none#${VPS_NAME}-wsa
@@ -276,7 +276,7 @@ EOF
     echo "====================================================="
 
     # MIHOMO (Clash Meta) YAML FILE
-    cat >/home/list/mihomo <<EOF
+    cat >/root/list/mihomo <<EOF
 proxies:
   - type: vless
     name: ${VPS_NAME}-reality
