@@ -289,6 +289,13 @@ start_sing_box() {
 generate_share_links() {
     mkdir -p /root/list
 
+    # 自动为 IPv6 添加双引号，不修改已有的中括号格式
+    if [[ "$VPS_IP_FORMATTED" == *:* && "$VPS_IP_FORMATTED" != *.* ]]; then
+        MIHOMO_SERVER="\"${VPS_IP_FORMATTED}\""
+    else
+        MIHOMO_SERVER="$VPS_IP_FORMATTED"
+    fi
+
     PASSWORD_HY2_ENC=$(printf '%s' "$PASSWORD_HY2" | sed -e 's/\//%2F/g')
 
     # 统一使用 /root/list（你原脚本路径有误）
@@ -307,7 +314,7 @@ EOF
 proxies:
   - type: vless
     name: ${VPS_NAME}-reality
-    server: ${VPS_IP_FORMATTED}
+    server: ${MIHOMO_SERVER}
     port: ${PORT_REAL}
     uuid: ${UUID_REAL}
     network: tcp
@@ -321,7 +328,7 @@ proxies:
 
   - type: hysteria2
     name: ${VPS_NAME}-hy2
-    server: ${VPS_IP_FORMATTED}
+    server: ${MIHOMO_SERVER}
     port: ${PORT_HY2}
     password: ${PASSWORD_HY2}
     sni: ${DOMAIN_VPS}
