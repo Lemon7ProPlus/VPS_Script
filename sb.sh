@@ -295,7 +295,8 @@ generate_share_links() {
     cat >/root/list/singbox <<EOF
 vless://${UUID_REAL}@${VPS_IP_FORMATTED}:${PORT_REAL}?security=reality&sni=${DOMAIN_REAL}&fp=firefox&pbk=${PUBLIC_KEY_REAL}&type=tcp&flow=xtls-rprx-vision&packetEncoding=xudp&encryption=none#${VPS_NAME}-reality
 hy2://${PASSWORD_HY2_ENC}@${VPS_IP_FORMATTED}:${PORT_HY2}?sni=${DOMAIN_VPS}#${VPS_NAME}-hy2
-vless://${UUID_WS}@${DOMAIN_CDN}:443?security=tls&sni=${DOMAIN_VPS}&fp=firefox&type=ws&path=${PATH_WS}&host=${DOMAIN_VPS}&mux=false&packetEncoding=xudp&encryption=none#${VPS_NAME}-wss
+vless://${UUID_WS}@${DOMAIN_CDN}:8443?security=tls&sni=${DOMAIN_VPS}&fp=firefox&type=ws&path=${PATH_WS}&host=${DOMAIN_VPS}&mux=false&packetEncoding=xudp&encryption=none#${VPS_NAME}-wsa
+vless://${UUID_WS}@${DOMAIN_CDN}:8443?security=tls&sni=${DOMAIN_VPS}&fp=firefox&type=ws&path=${PATH_WS}&host=${DOMAIN_VPS}&mux=false&packetEncoding=xudp&encryption=none#${VPS_NAME}-wss
 EOF
 
     echo "========== Generated Share Links (singbox) =========="
@@ -324,11 +325,26 @@ proxies:
     port: ${PORT_HY2}
     password: ${PASSWORD_HY2}
     sni: ${DOMAIN_VPS}
-
+  
+  - type: vless
+    name: ${VPS_NAME}-wsa
+    server: ${DOMAIN_CDN}
+    port: 8443
+    uuid: ${UUID_WS}
+    network: ws
+    servername: ${DOMAIN_VPS}
+    tls: true
+    encryption: none
+    ws-opts:
+      path: ${PATH_WS}
+      headers:
+        Host: ${DOMAIN_VPS}
+    client-fingerprint: firefox
+  
   - type: vless
     name: ${VPS_NAME}-wss
     server: ${DOMAIN_CDN}
-    port: 443
+    port: 8443
     uuid: ${UUID_WS}
     network: ws
     servername: ${DOMAIN_VPS}
