@@ -63,7 +63,7 @@ get_vps_ip() {
         ip=$(curl -s --connect-timeout 3 https://one.one.one.one/cdn-cgi/trace | grep '^ip=' | cut -d= -f2)
     fi
     [ -z "$ip" ] && ip=$(hostname -I | awk '{print $1}')
-    [ -z "$ip" ] && { echo "无法获取 VPS IP" >&2; return 1; }
+    [ -z "$ip" ] && { echo "❌ 无法获取 VPS IP" >&2; return 1; }
     echo "$ip"
 }
 
@@ -246,7 +246,7 @@ install_sing_box() {
     OS_ID=$(echo "$ID" | tr '[:upper:]' '[:lower:]')
 
     if command -v sing-box >/dev/null 2>&1; then
-        echo "已安装 sing-box：$(sing-box version 2>/dev/null | head -n 1)"
+        echo "✅ 已安装 sing-box：$(sing-box version 2>/dev/null | head -n 1)"
         return 0
     fi
 
@@ -261,7 +261,7 @@ install_sing_box() {
             echo "不支持的系统类型：$OS_ID"; return 1 ;;
     esac
 
-    command -v sing-box >/dev/null 2>&1 && echo "安装成功" || { echo "安装失败"; return 1; }
+    command -v sing-box >/dev/null 2>&1 && echo "✅ 安装成功" || { echo "❌ 安装失败"; return 1; }
 }
 
 # ---------- 启动 sing-box ----------
