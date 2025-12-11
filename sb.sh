@@ -259,7 +259,7 @@ start_sing_box() {
 
 # ---------- 分享链接 ----------
 generate_share_links() {
-    mkdir -p /home/list
+    mkdir -p /root/list
 
     # URL encode hy2 password, keep "==" unchanged
     PASSWORD_HY2_ENC=$(printf '%s' "$PASSWORD_HY2" | sed -e 's/\//%2F/g')
@@ -272,7 +272,7 @@ vless://${UUID_WS}@${DOMAIN_CDN}:443?security=tls&sni=${DOMAIN_VPS}&fp=firefox&t
 EOF
 
     echo "========== Generated Share Links (singbox) =========="
-    cat /home/list/singbox
+    cat /root/list/singbox
     echo "====================================================="
 
     # MIHOMO (Clash Meta) YAML FILE
@@ -316,7 +316,7 @@ proxies:
 EOF
 
     echo "========== Generated Clash/Mihomo File (mihomo) =========="
-    cat /home/list/mihomo
+    cat /root/list/mihomo
     echo "=========================================================="
 }
 
