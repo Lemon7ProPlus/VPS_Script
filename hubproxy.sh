@@ -2,6 +2,14 @@
 
 set -e
 
+if [ -z "$CUSTOM_DOMAIN" ]; then
+    echo "错误：未设置 CUSTOM_DOMAIN 环境变量"
+    echo "用法：CUSTOM_DOMAIN=example.com bash hubproxy-install.sh"
+    exit 1
+fi
+
+echo "使用域名: $CUSTOM_DOMAIN"
+
 echo "=== 1. 安装 Caddy ==="
 apt update
 apt install -y debian-keyring debian-archive-keyring apt-transport-https curl
@@ -25,8 +33,7 @@ echo "=== 3. 配置 Caddyfile ==="
 
 CADDYFILE="/etc/caddy/Caddyfile"
 
-# 要追加的配置内容
-read -r -d '' ADD_CFG << 'EOF'
+ADD_CFG=$(cat << EOF
 $CUSTOM_DOMAIN {
     reverse_proxy 127.0.0.1:5000 {
         header_up X-Forwarded-For {http.request.header.CF-Connecting-IP}
@@ -36,9 +43,10 @@ $CUSTOM_DOMAIN {
     }
 }
 EOF
+)
 
-# 检查是否已存在，避免重复添加
-if grep -q "hp.onemoess.com" "$CADDYFILE"; then
+# 检查是否已存在
+if grep -q "$CUSTOM_DOMAIN" "$CADDYFILE"; then
     echo "配置已存在，跳过追加"
 else
     echo "$ADD_CFG" >> "$CADDYFILE"
