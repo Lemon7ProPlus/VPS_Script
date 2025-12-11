@@ -21,7 +21,7 @@ bash
 ```
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/USER/REPO/main/hubproxy.sh | \
+curl -fsSL https://raw.githubusercontent.com/Lemon7ProPlus/VPS_Script/main/hubproxy.sh | \
 CUSTOM_DOMAIN=your.domain.com \
 bash
 ```
