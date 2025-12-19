@@ -15,6 +15,7 @@ bash
 ```bash
 curl -fsSL https://raw.githubusercontent.com/Lemon7ProPlus/VPS_Script/main/sshwifty.sh | \
 DOMAIN=YOUR_SERVER_DOMAIN \
+PASSWORD=YOUR_PASSWORD \
 bash
 ```
 ## Hubproxy
