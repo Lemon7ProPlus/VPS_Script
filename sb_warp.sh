@@ -1,5 +1,5 @@
 #!/bin/bash
-# gen_config.sh - 生成 config.json 配置文件并输出分享链接 (集成 WARP 支持)
+# gen_config.sh - 生成 config.json 配置文件并输出分享链接
 set -euo pipefail
 
 CONFIG_FILE="config.json"
@@ -41,21 +41,6 @@ DOMAIN_REAL=${DOMAIN_REAL:-"addons.mozilla.org"}
 DOMAIN_VPS=${DOMAIN_VPS:-"vps.example.com"}
 TOKEN_CF=${TOKEN_CF:-"your_cf_token"}
 DOMAIN_CDN=${DOMAIN_CDN:-"cf.090227.xyz"}
-
-# ========== 新增: WARP 节点配置 ==========
-# 是否启用 WARP 出站？(启用填 true，不启用填 false)
-WARP_ENABLE=${WARP_ENABLE:-"false"}
-
-# WARP 路由模式：
-# "all"    代表所有节点流量都走 WARP 出站 (隐藏 VPS 真实IP)
-# "custom" 代表只有特定网站 (如 ChatGPT, Netflix 等) 才走 WARP，其余直连
-WARP_ROUTING_MODE=${WARP_ROUTING_MODE:-"custom"}
-
-# 请使用 WGCF 等工具获取 WARP 的 WireGuard 节点信息并填入下方：
-WARP_IPV4=${WARP_IPV4:-"172.16.0.2/32"}                                # WARP 分配的 IPv4
-WARP_IPV6=${WARP_IPV6:-"2606:4700:110:8xxx:xxxx:xxxx:xxxx:xxxx/128"} # WARP 分配的 IPv6
-WARP_PRIVATE_KEY=${WARP_PRIVATE_KEY:-"YOUR_WARP_PRIVATE_KEY"}          # WARP WireGuard 私钥
-WARP_RESERVED=${WARP_RESERVED:-"[0,0,0]"}                              # 客户端保留字段，如果有的话
 
 # ---------- 辅助函数 ----------
 urlencode() {
@@ -127,61 +112,6 @@ generate_config_values() {
 # ---------- 生成 config.json ----------
 generate_config_json() {
     echo "生成 config.json..."
-
-    # 处理 WARP 逻辑
-    local OUTBOUND_WARP=""
-    local ROUTE_RULE=""
-    local DEFAULT_OUTBOUND="direct-out"
-
-    if [ "$WARP_ENABLE" = "true" ]; then
-        if [ "$WARP_PRIVATE_KEY" = "YOUR_WARP_PRIVATE_KEY" ]; then
-            echo "[错误] 已启用 WARP，但未配置 WARP_PRIVATE_KEY，请检查脚本顶部配置！"
-            exit 1
-        fi
-        
-        echo ">> 已启用 WARP 出站节点"
-        local ADDRS=""
-        [ -n "$WARP_IPV4" ] && ADDRS="\"$WARP_IPV4\""
-        [ -n "$WARP_IPV6" ] && {
-            [ -n "$ADDRS" ] && ADDRS="$ADDRS, \"$WARP_IPV6\"" || ADDRS="\"$WARP_IPV6\""
-        }
-
-        # 构建 WARP WireGuard 出站 JSON 代码段
-        OUTBOUND_WARP=$(cat <<EOF
-        ,{
-            "type": "wireguard",
-            "tag": "warp-out",
-            "server": "engage.cloudflareclient.com",
-            "server_port": 2408,
-            "local_address": [
-                $ADDRS
-            ],
-            "private_key": "${WARP_PRIVATE_KEY}",
-            "peer_public_key": "bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfT0s=",
-            "reserved": ${WARP_RESERVED},
-            "mtu": 1280
-        }
-EOF
-)
-        
-        # 根据路由模式分配流量
-        if [ "$WARP_ROUTING_MODE" = "all" ]; then
-            echo ">> 路由模式: 所有流量走 WARP"
-            DEFAULT_OUTBOUND="warp-out"
-            ROUTE_RULE=""
-        else
-            echo ">> 路由模式: 仅特定域名 (AI/流媒体) 走 WARP"
-            DEFAULT_OUTBOUND="direct-out"
-            ROUTE_RULE=$(cat <<EOF
-            {
-                "domain_suffix": ["openai.com", "chatgpt.com", "netflix.com", "disneyplus.com", "ipinfo.io"],
-                "outbound": "warp-out"
-            },
-EOF
-)
-        fi
-    fi
-
     cat > "$CONFIG_FILE" << EOF
 {
     "log": {
@@ -287,20 +217,61 @@ EOF
         {
             "type": "direct",
             "tag": "direct-out"
-        }${OUTBOUND_WARP}
+        }
+    ],
+    "endpoints": [
+        {
+            "type":"wireguard",
+            "tag":"warp-ep",
+            "mtu":1280,
+            "address": [
+                "172.16.0.2/32",
+                "2606:4700:110:8a36:df92:102a:9602:fa18/128"
+            ],
+            "private_key":"YFYOAdbw1bKTHlNNi+aEjBM3BO7unuFC5rOkMRAz9XY=",
+            "peers": [
+              {
+                "address": "engage.cloudflareclient.com",
+                "port":2408,
+                "public_key":"bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=",
+                "allowed_ips": [
+                  "0.0.0.0/0",
+                  "::/0"
+                ],
+                "reserved":[
+                    78,
+                    135,
+                    76
+                ]
+              }
+            ]
+        }
     ],
     "route": {
+        "rule_set":[
+            {
+                "tag":"geosite-ai",
+                "type":"remote",
+                "format":"binary",
+                "url":"https://raw.githubusercontent.com/SagerNet/sing-geosite/rule-set/geosite-category-ai-!cn.srs"
+            }
+        ],
         "rules": [
-${ROUTE_RULE}            {
+            {
                 "inbound": [
                     "vless-reality",
                     "hy2",
                     "vless-ws"
                 ],
-                "outbound": "${DEFAULT_OUTBOUND}"
+                "outbound": "direct-out"
+            },
+            {
+                "rule_set": [
+                    "geosite-ai"
+                ],
+                "outbound": "warp-ep"
             }
-        ],
-        "auto_detect_interface": true
+        ]
     }
 }
 EOF
@@ -360,6 +331,7 @@ start_sing_box() {
 generate_share_links() {
     mkdir -p /root/list
 
+    # 自动为 IPv6 添加双引号，不修改已有的中括号格式
     if [[ "$VPS_IP_FORMATTED" == *:* && "$VPS_IP_FORMATTED" != *.* ]]; then
         MIHOMO_SERVER="\"${VPS_IP_FORMATTED}\""
     else
@@ -368,6 +340,7 @@ generate_share_links() {
 
     PASSWORD_HY2_ENC=$(printf '%s' "$PASSWORD_HY2" | sed -e 's/\//%2F/g')
 
+    # 统一使用 /root/list（你原脚本路径有误）
     cat >/root/list/singbox <<EOF
 vless://${UUID_REAL}@${VPS_IP_FORMATTED}:${PORT_REAL}?security=reality&sni=${DOMAIN_REAL}&fp=firefox&pbk=${PUBLIC_KEY_REAL}&type=tcp&flow=xtls-rprx-vision&packetEncoding=xudp&encryption=none#${VPS_NAME}-reality
 hy2://${PASSWORD_HY2_ENC}@${VPS_IP_FORMATTED}:${PORT_HY2}?sni=${DOMAIN_VPS}#${VPS_NAME}-hy2
