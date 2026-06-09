@@ -32,7 +32,7 @@ install_dependencies() {
 # ---------- 用户自定义参数 ----------
 VPS_NAME=${VPS_NAME:-"myserver"}
 
-WORK_DIR=${WORK_DIR:-"/root/sing-box"}
+WORK_DIR=${WORK_DIR:-"/home/sing-box"}
 
 STRATEGY=${STRATEGY:-"prefer_ipv4"}
 AI_OUT=${AI_OUT:-"direct-out"}
@@ -40,8 +40,8 @@ AI_OUT=${AI_OUT:-"direct-out"}
 REALITY_PORT=${REALITY_PORT:-443}
 REALITY_DOMAIN=${REALITY_DOMAIN:-"addons.mozilla.org"}
 
-HY2_PORT=${HY2_PORT:-8443}
-WS_PORT=${WS_PORT:-8663}
+HY2_PORT=${HY2_PORT:-8553}
+WS_PORT=${WS_PORT:-8443}
 
 WS_BRUTAL=${WS_BRUTAL:-false}
 
@@ -49,7 +49,7 @@ TLS_VPS=${TLS_VPS:-"vps.example.com"}
 TLS_EMAIL=${TLS_EMAIL:-"vps@example.com"}
 TLS_TOKEN=${TLS_TOKEN:-"your_cf_token"}
 
-DOMAIN_CDN=${DOMAIN_CDN:-"cf.090227.xyz"}
+DOMAIN_CDN=${DOMAIN_CDN:-"www.visa.com.sg"}
 
 # ---------- 辅助函数 ----------
 get_vps_ip() {
@@ -92,6 +92,9 @@ generate_config_values() {
 generate_config_json() {
     mkdir -p ${WORK_DIR}
     
+    chown -R sing-box:sing-box ${WORK_DIR}
+    chmod 750 ${WORK_DIR}
+    
     echo "生成 config.json..."
     
     # 生成 log 配置
@@ -112,7 +115,12 @@ EOF
   "outbounds": [
     {
       "type": "direct", 
-      "tag": "direct-out"
+      "tag": "direct-out", 
+      "domain_resolver": {
+        "server": "local-dns",
+        "rewrite_ttl": 60,
+        "client_subnet": "1.1.1.1"
+      }
     }
   ]
 }
@@ -156,6 +164,11 @@ EOF
     cat > /etc/sing-box/03_route.json << EOF
 {
   "route":{
+    "default_domain_resolver": {
+      "server": "local-dns",
+      "rewrite_ttl": 60,
+      "client_subnet": "1.1.1.1"
+    }, 
     "rule_set": [
       {
         "tag": "geosite-ai", 
@@ -185,8 +198,10 @@ EOF
     cat > /etc/sing-box/04_experimental.json << EOF
 {
   "experimental": {
-    "cache_file": true, 
-    "path": "${WORK_DIR}/cache.db"
+    "cache_file": {
+      "enabled": true,
+      "path": "${WORK_DIR}/cache.db"
+    }
   }
 }
 EOF
@@ -348,7 +363,7 @@ EOF
 }
 EOF
 
-    chmod 600 /etc/sing-box/*.json 2>/dev/null || true
+    chmod 644 /etc/sing-box/*.json 2>/dev/null || true
 }
 
 # ---------- 安装 sing-box ----------
