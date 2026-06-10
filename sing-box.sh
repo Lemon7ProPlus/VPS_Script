@@ -119,7 +119,7 @@ EOF
       "domain_resolver": {
         "server": "local-dns",
         "rewrite_ttl": 60,
-        "client_subnet": "1.1.1.1"
+        "client_subnet": "8.8.8.8"
       }
     }
   ]
@@ -167,7 +167,7 @@ EOF
     "default_domain_resolver": {
       "server": "local-dns",
       "rewrite_ttl": 60,
-      "client_subnet": "1.1.1.1"
+      "client_subnet": "8.8.8.8"
     }, 
     "rule_set": [
       {
@@ -431,11 +431,23 @@ generate_share_links() {
     HY2_UUID_ENC=$(printf '%s' "$HY2_UUID" | sed 's/\//%2F/g; s/+/%2B/g; s/=/%3D/g')
 
     # 统一使用 /root/list
-    cat > ${WORK_DIR}/list/singbox <<EOF
+    cat > ${WORK_DIR}/list/v2ray <<EOF
 vless://${REALITY_UUID}@${VPS_IP_FORMATTED}:${REALITY_PORT}?security=reality&sni=${REALITY_DOMAIN}&fp=firefox&pbk=${REALITY_PUBLIC_KEY}&type=tcp&flow=xtls-rprx-vision&packetEncoding=xudp&encryption=none#${VPS_NAME}-reality
 hy2://${HY2_UUID_ENC}@${VPS_IP_FORMATTED}:${HY2_PORT}?sni=${TLS_VPS}#${VPS_NAME}-hy2
 vless://${WS_UUID}@${DOMAIN_CDN}:8443?security=tls&sni=${TLS_VPS}&fp=firefox&type=ws&path=${WS_PATH}&host=${TLS_VPS}&mux=false&packetEncoding=xudp&encryption=none#${VPS_NAME}-wsa
 vless://${WS_UUID}@${DOMAIN_CDN}:8443?security=tls&sni=${TLS_VPS}&fp=firefox&type=ws&path=${WS_PATH}&host=${TLS_VPS}&mux=false&packetEncoding=xudp&encryption=none#${VPS_NAME}-wss
+EOF
+
+    echo "========== Generated Share Links (v2ray) ============"
+    cat ${WORK_DIR}/list/v2ray
+    echo "====================================================="
+
+    cat > ${WORK_DIR}/list/singbox <<EOF
+{ "tag":"${VPS_NAME}-reality","type":"vless","server":"${MIHOMO_SERVER}","server_port":${REALITY_PORT},"uuid":"${REALITY_UUID}","tls":{"enabled":true,"server_name":"${REALITY_DOMAIN}","insecure":false,"reality":{"enabled":true,"public_key":"${REALITY_PUBLIC_KEY}"},"utls":{"enabled":true,"fingerprint":"firefox"}},"flow":"xtls-rprx-vision"}, 
+{ "tag":"${VPS_NAME}-hy2","type":"hysteria2","server":"${MIHOMO_SERVER}","server_port":${HY2_PORT},"password":"${HY2_UUID}","tls":{"enabled":true,"server_name":"${TLS_VPS}","insecure":false}}, 
+{ "tag":"${VPS_NAME}-wsa","type":"vless","server":"${DOMAIN_CDN}","server_port":8443,"uuid":"${WS_UUID}","tls":{"enabled":true,"server_name":"${TLS_VPS}","insecure":false,"utls":{"enabled":true,"fingerprint":"firefox"}},"transport":{"type":"ws","headers":{"Host":"${TLS_VPS}"},"path":"${WS_PATH}"}}, 
+{ "tag":"${VPS_NAME}-wss","type":"vless","server":"${DOMAIN_CDN}","server_port":8443,"uuid":"${WS_UUID}","tls":{"enabled":true,"server_name":"${TLS_VPS}","insecure":false,"utls":{"enabled":true,"fingerprint":"firefox"}},"transport":{"type":"ws","headers":{"Host":"${TLS_VPS}"},"path":"${WS_PATH}"}}, 
+
 EOF
 
     echo "========== Generated Share Links (singbox) =========="
