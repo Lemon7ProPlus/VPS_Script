@@ -2,7 +2,7 @@
 
 ## Sing-box
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Lemon7ProPlus/VPS_Script/main/sb_new.sh | \
+curl -fsSL https://raw.githubusercontent.com/Lemon7ProPlus/VPS_Script/main/sing-box.sh | \
 VPS_NAME="myserver" \
 STRATEGY="prefer_ipv4" \
 AI_OUT="direct-out" \
@@ -14,18 +14,6 @@ WS_BRUTAL="false" \
 TLS_VPS="VPS_Domain" \
 TLS_EMAIL="vps@example.com" \
 TLS_TOKEN="CF_Token" \
-bash
-```
-## Sing-box
-```bash
-curl -fsSL https://raw.githubusercontent.com/Lemon7ProPlus/VPS_Script/main/sb.sh | \
-VPS_NAME="myserver" \
-PORT_REAL=REALITY_Port \
-PORT_WS=Websock_Port \
-PORT_HY2=Hysteria2_Port \
-DOMAIN_REAL="Reality_Domain" \
-DOMAIN_VPS="VPS_Domain" \
-TOKEN_CF="CF_Token" \
 bash
 ```
 ## SSHwifty
